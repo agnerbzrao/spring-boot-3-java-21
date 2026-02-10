@@ -1,6 +1,11 @@
 package br.com.spring.agner.rest_with_spring_boot.services;
 
+import br.com.spring.agner.rest_with_spring_boot.data.dto.PersonDTO;
 import br.com.spring.agner.rest_with_spring_boot.exception.ResourceNotFoundException;
+
+import static br.com.spring.agner.rest_with_spring_boot.mapper.ObjectMapper.parseListObjects;
+import static br.com.spring.agner.rest_with_spring_boot.mapper.ObjectMapper.parseObject;
+
 import br.com.spring.agner.rest_with_spring_boot.model.PersonModel;
 import br.com.spring.agner.rest_with_spring_boot.repository.PersonRepository;
 import org.slf4j.Logger;
@@ -19,48 +24,40 @@ public class PersonService {
     @Autowired
     PersonRepository personRepository;
 
-    public List<PersonModel> findByAll() {
-        logger.info("Find All PersonModel");
+    public List<PersonDTO> findByAll() {
+        logger.info("Find All PersonDTO");
 
-        return personRepository.findAll();
+        return parseListObjects(personRepository.findAll(), PersonDTO.class);
     }
 
-    public PersonModel findById(Long id) {
-        logger.info("Find one PersonModel");
-        return personRepository.findById(id)
+    public PersonDTO findById(Long id) {
+        logger.info("Find one PersonDTO");
+        PersonModel personEntity = personRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
+        return parseObject(personEntity, PersonDTO.class);
     }
 
-    private PersonModel mockPerson(int i) {
-        logger.info("Find all PersonModel");
-        PersonModel personModel = new PersonModel();
-        personModel.setId(counter.incrementAndGet());
-        personModel.setFirstName("FirstName" + i);
-        personModel.setLastName("LastName" + i);
-        personModel.setAddress("Rua Address" + i);
-        personModel.setGender("Male");
-        return personModel;
+    public PersonDTO create(PersonDTO personDTO) {
+        logger.info("Creating one PersonDTO");
+        PersonModel personEntity = parseObject(personDTO, PersonModel.class);
+
+        return parseObject(personRepository.save(personEntity), PersonDTO.class);
     }
 
-    public PersonModel create(PersonModel personModel) {
-        logger.info("Creating one PersonModel");
-        return personRepository.save(personModel);
-    }
-
-    public PersonModel update(PersonModel personModel) {
-        logger.info("Updating one PersonModel");
-        PersonModel personEntity = personRepository.findById(personModel.getId())
+    public PersonDTO update(PersonDTO personDTO) {
+        logger.info("Updating one PersonDTO");
+        PersonModel personEntity = personRepository.findById(personDTO.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
 
-        personEntity.setFirstName(personEntity.getFirstName());
-        personEntity.setLastName(personEntity.getLastName());
-        personEntity.setAddress(personEntity.getAddress());
-        personEntity.setGender(personEntity.getGender());
-        return personRepository.save(personModel);
+        personEntity.setFirstName(personDTO.getFirstName());
+        personEntity.setLastName(personDTO.getLastName());
+        personEntity.setAddress(personDTO.getAddress());
+        personEntity.setGender(personDTO.getGender());
+        return parseObject(personRepository.save(personEntity), PersonDTO.class);
     }
 
     public void delete(Long id) {
-        logger.info("Deleting one PersonModel");
+        logger.info("Deleting one Person");
         PersonModel personEntity = personRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
         personRepository.delete(personEntity);

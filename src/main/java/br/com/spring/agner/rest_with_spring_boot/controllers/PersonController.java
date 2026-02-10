@@ -1,6 +1,6 @@
 package br.com.spring.agner.rest_with_spring_boot.controllers;
 
-import br.com.spring.agner.rest_with_spring_boot.model.PersonModel;
+import br.com.spring.agner.rest_with_spring_boot.data.dto.PersonDTO;
 import br.com.spring.agner.rest_with_spring_boot.services.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -18,23 +18,23 @@ public class PersonController {
     private PersonService personService;
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<PersonModel> findAll() {
+    public List<PersonDTO> findAll() {
         return personService.findByAll();
     }
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public PersonModel findById(@PathVariable("id") Long id) {
+    public PersonDTO findById(@PathVariable("id") Long id) {
         return personService.findById(id);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public PersonModel create(@RequestBody PersonModel personModel) {
-        return personService.create(personModel);
+    public PersonDTO create(@RequestBody PersonDTO personDTO) {
+        return personService.create(personDTO);
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public PersonModel update(@RequestBody PersonModel personModel) {
-        return personService.update(personModel);
+    public PersonDTO update(@RequestBody PersonDTO personDTO) {
+        return personService.update(personDTO);
     }
 
     @DeleteMapping(value = "/{id}")
