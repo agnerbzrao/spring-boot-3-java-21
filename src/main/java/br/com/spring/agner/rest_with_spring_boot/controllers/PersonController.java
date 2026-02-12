@@ -1,6 +1,7 @@
 package br.com.spring.agner.rest_with_spring_boot.controllers;
 
-import br.com.spring.agner.rest_with_spring_boot.data.dto.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.data.dto.v1.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.data.dto.v2.PersonDTOV2;
 import br.com.spring.agner.rest_with_spring_boot.services.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -8,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/person")
@@ -30,6 +30,11 @@ public class PersonController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public PersonDTO create(@RequestBody PersonDTO personDTO) {
         return personService.create(personDTO);
+    }
+
+    @PostMapping(value="/v2", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public PersonDTOV2 createV2(@RequestBody PersonDTOV2 personDTOV2) {
+        return personService.createV2(personDTOV2);
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
