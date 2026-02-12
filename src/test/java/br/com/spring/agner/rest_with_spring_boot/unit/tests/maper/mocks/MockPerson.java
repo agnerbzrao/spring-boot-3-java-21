@@ -4,7 +4,7 @@ package br.com.spring.agner.rest_with_spring_boot.unit.tests.maper.mocks;
 import java.util.ArrayList;
 import java.util.List;
 
-import br.com.spring.agner.rest_with_spring_boot.data.dto.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.data.dto.v1.PersonDTO;
 import br.com.spring.agner.rest_with_spring_boot.model.PersonModel;
 
 public class MockPerson {
