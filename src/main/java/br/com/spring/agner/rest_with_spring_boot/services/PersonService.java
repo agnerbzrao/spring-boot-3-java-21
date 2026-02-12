@@ -1,11 +1,13 @@
 package br.com.spring.agner.rest_with_spring_boot.services;
 
-import br.com.spring.agner.rest_with_spring_boot.data.dto.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.data.dto.v1.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.data.dto.v2.PersonDTOV2;
 import br.com.spring.agner.rest_with_spring_boot.exception.ResourceNotFoundException;
 
 import static br.com.spring.agner.rest_with_spring_boot.mapper.ObjectMapper.parseListObjects;
 import static br.com.spring.agner.rest_with_spring_boot.mapper.ObjectMapper.parseObject;
 
+import br.com.spring.agner.rest_with_spring_boot.mapper.custom.PersonMapper;
 import br.com.spring.agner.rest_with_spring_boot.model.PersonModel;
 import br.com.spring.agner.rest_with_spring_boot.repository.PersonRepository;
 import org.slf4j.Logger;
@@ -23,6 +25,9 @@ public class PersonService {
 
     @Autowired
     PersonRepository personRepository;
+
+    @Autowired
+    PersonMapper personMapper;
 
     public List<PersonDTO> findByAll() {
         logger.info("Find All PersonDTO");
@@ -42,6 +47,13 @@ public class PersonService {
         PersonModel personEntity = parseObject(personDTO, PersonModel.class);
 
         return parseObject(personRepository.save(personEntity), PersonDTO.class);
+    }
+
+    public PersonDTOV2 createV2(PersonDTOV2 personDTOV2) {
+        logger.info("Creating one PersonDTOV2");
+        PersonModel personEntity = personMapper.convertDTOToEntity(personDTOV2);
+
+        return personMapper.convertEntityToDTO(personRepository.save(personEntity));
     }
 
     public PersonDTO update(PersonDTO personDTO) {
