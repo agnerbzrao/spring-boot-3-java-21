@@ -3,6 +3,7 @@ package br.com.spring.agner.rest_with_spring_boot.data.dto.v1;
 import br.com.spring.agner.rest_with_spring_boot.serializer.GenderSerializer;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -10,8 +11,8 @@ import java.util.Date;
 import java.util.Objects;
 
 //@JsonPropertyOrder({"id,", "address,", "first_name,", "last_name", "gender,"})
-@JsonFilter("PersonFilter")
-public class PersonDTO implements Serializable {
+//@JsonFilter("PersonFilter")
+public class PersonDTO extends RepresentationModel<PersonDTO> implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -29,7 +30,7 @@ public class PersonDTO implements Serializable {
 
     private Date birthDay;
 
-    @JsonIgnore
+//    @JsonIgnore
     private String address;
 
     private String sensitiveDate;
