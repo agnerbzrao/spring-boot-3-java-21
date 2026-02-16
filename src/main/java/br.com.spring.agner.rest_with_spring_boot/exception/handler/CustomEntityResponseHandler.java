@@ -2,6 +2,7 @@ package br.com.spring.agner.rest_with_spring_boot.exception.handler;
 
 import br.com.spring.agner.rest_with_spring_boot.exception.ExceptionResponse;
 import br.com.spring.agner.rest_with_spring_boot.exception.ResourceNotFoundException;
+import br.com.spring.agner.rest_with_spring_boot.exception.ResourceObjectIsNullException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -31,5 +32,13 @@ public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler 
                 ex.getMessage(),
                 request.getDescription(false));
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(ResourceObjectIsNullException.class)
+    public final ResponseEntity<ExceptionResponse> handleBadRquestExceptions(Exception ex, WebRequest request) {
+        ExceptionResponse response = new ExceptionResponse(
+                new Date(),
+                ex.getMessage(),
+                request.getDescription(false));
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 }
