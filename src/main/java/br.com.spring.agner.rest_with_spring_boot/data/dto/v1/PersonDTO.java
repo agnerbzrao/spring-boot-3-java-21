@@ -33,7 +33,7 @@ public class PersonDTO extends RepresentationModel<PersonDTO> implements Seriali
 
     private String sensitiveDate;
 
-    @JsonSerialize(using = GenderSerializer.class)
+//    @JsonSerialize(using = GenderSerializer.class)
     private String gender;
 
     public String getPhoneNumber() {
