@@ -12,6 +12,7 @@ import br.com.spring.agner.rest_with_spring_boot.exception.ResourceObjectIsNullE
 import br.com.spring.agner.rest_with_spring_boot.mapper.custom.PersonMapper;
 import br.com.spring.agner.rest_with_spring_boot.model.PersonModel;
 import br.com.spring.agner.rest_with_spring_boot.repository.PersonRepository;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,12 +92,24 @@ public class PersonService {
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
         personRepository.delete(personEntity);
     }
+    @Transactional
+    public PersonDTO disablePerson(Long id) {
+        logger.info("Disabling one Person");
+        personRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
+        personRepository.disablePerson(id);
+        PersonModel entity = personRepository.findById(id).get();
+        PersonDTO resultParse= parseObject(entity, PersonDTO.class);
+        addHateoasLinks(resultParse);
+        return resultParse;
+    }
 
     private void addHateoasLinks(PersonDTO resultParse) {
         resultParse.add(linkTo(methodOn(PersonController.class).findById(resultParse.getId())).withSelfRel().withType("GET"));
         resultParse.add(linkTo(methodOn(PersonController.class).findAll()).withRel("findAll").withType("GET"));
         resultParse.add(linkTo(methodOn(PersonController.class).create(resultParse)).withRel("create").withType("POST"));
         resultParse.add(linkTo(methodOn(PersonController.class).update(resultParse)).withRel("update").withType("PUT"));
+        resultParse.add(linkTo(methodOn(PersonController.class).disablePerson(resultParse.getId())).withRel("disable").withType("PATCH"));
         resultParse.add(linkTo(methodOn(PersonController.class).delete(resultParse.getId())).withRel("delete").withType("DELETE"));
     }
 }
