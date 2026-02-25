@@ -31,7 +31,6 @@ public class PersonController implements PersonControllerDocs {
         PersonDTO personDTO = personService.findById(id);
         personDTO.setBirthDay(new Date());
         personDTO.setPhoneNumber("1111111");
-//        personDTO.setSensitiveDate("Foo Bar");
         return personDTO;
     }
 
@@ -51,6 +50,12 @@ public class PersonController implements PersonControllerDocs {
     @PutMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_YAML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_YAML_VALUE})
     public PersonDTO update(@RequestBody PersonDTO personDTO) {
         return personService.update(personDTO);
+    }
+
+    @Override
+    @PatchMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_YAML_VALUE})
+    public PersonDTO disablePerson(@PathVariable("id") Long id) {
+        return personService.disablePerson(id);
     }
 
     @Override
