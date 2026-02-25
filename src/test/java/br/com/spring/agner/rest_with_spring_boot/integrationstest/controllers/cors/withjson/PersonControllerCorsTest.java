@@ -1,4 +1,4 @@
-package br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.withjson;
+package br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.cors.withjson;
 
 import br.com.spring.agner.rest_with_spring_boot.config.TestConfigs;
 import br.com.spring.agner.rest_with_spring_boot.data.dto.v1.PersonDTO;
@@ -20,7 +20,7 @@ import static junit.framework.TestCase.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class PersonControllerTest extends AbstractIntegrationTest {
+class PersonControllerCorsTest extends AbstractIntegrationTest {
 
     private static RequestSpecification specification;
     private static ObjectMapper objectMapper;
@@ -68,6 +68,7 @@ class PersonControllerTest extends AbstractIntegrationTest {
         assertEquals("Borner", createdPerson.getLastName());
         assertEquals("São Paulo - São Paulo - BRAZIL", createdPerson.getAddress());
         assertEquals("Male", createdPerson.getGender());
+        assertTrue(createdPerson.getEnabled());
     }
 
     @Test
@@ -93,13 +94,6 @@ class PersonControllerTest extends AbstractIntegrationTest {
                 .extract().body().asString();
 
         assertEquals("Invalid CORS request", content);
-    }
-
-    private void mockPerson() {
-        personDTO.setFirstName("John");
-        personDTO.setLastName("Borner");
-        personDTO.setAddress("São Paulo - São Paulo - BRAZIL");
-        personDTO.setGender("Male");
     }
 
     @Test
@@ -139,6 +133,7 @@ class PersonControllerTest extends AbstractIntegrationTest {
         assertEquals("Borner", createdPerson.getLastName());
         assertEquals("São Paulo - São Paulo - BRAZIL", createdPerson.getAddress());
         assertEquals("Male", createdPerson.getGender());
+        assertTrue(createdPerson.getEnabled());
     }
 
     @Test
@@ -170,5 +165,12 @@ class PersonControllerTest extends AbstractIntegrationTest {
 
     @Test
     void delete() {
+    }
+    private void mockPerson() {
+        personDTO.setFirstName("John");
+        personDTO.setLastName("Borner");
+        personDTO.setAddress("São Paulo - São Paulo - BRAZIL");
+        personDTO.setGender("Male");
+        personDTO.setEnabled(true);
     }
 }
