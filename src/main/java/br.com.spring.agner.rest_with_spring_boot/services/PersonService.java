@@ -4,10 +4,7 @@ import br.com.spring.agner.rest_with_spring_boot.controllers.PersonController;
 import br.com.spring.agner.rest_with_spring_boot.data.dto.v1.PersonDTO;
 import br.com.spring.agner.rest_with_spring_boot.data.dto.v2.PersonDTOV2;
 import br.com.spring.agner.rest_with_spring_boot.exception.ResourceNotFoundException;
-
-import static br.com.spring.agner.rest_with_spring_boot.mapper.ObjectMapper.parseListObjects;
 import static br.com.spring.agner.rest_with_spring_boot.mapper.ObjectMapper.parseObject;
-
 import br.com.spring.agner.rest_with_spring_boot.exception.ResourceObjectIsNullException;
 import br.com.spring.agner.rest_with_spring_boot.mapper.custom.PersonMapper;
 import br.com.spring.agner.rest_with_spring_boot.model.PersonModel;
@@ -18,10 +15,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -35,12 +36,42 @@ public class PersonService {
     @Autowired
     PersonMapper personMapper;
 
-    public List<PersonDTO> findByAll() {
-        logger.info("Find All PersonDTO");
+    @Autowired
+    PagedResourcesAssembler<PersonDTO> pagedResourcesAssembler;
 
-        List<PersonDTO> resultParsedList = parseListObjects(personRepository.findAll(), PersonDTO.class);
-         resultParsedList.forEach(this::addHateoasLinks);
-        return resultParsedList;
+    public PagedModel<EntityModel<PersonDTO>> findAll(Pageable pageable) {
+        logger.info("Find All PersonDTO");
+        Page<PersonModel> people = personRepository.findAll(pageable);
+
+        Page<PersonDTO> peopleWithLink = people.map(personModel -> {
+            PersonDTO personDTO = parseObject(personModel, PersonDTO.class);
+            addHateoasLinks(personDTO);
+            return personDTO;
+        });
+
+        Link findAllLinks = WebMvcLinkBuilder.linkTo(
+                        WebMvcLinkBuilder.methodOn(PersonController.class)
+                                .findAll(pageable.getPageNumber(), pageable.getPageSize(), String.valueOf(pageable.getSort())))
+                .withSelfRel();
+       return pagedResourcesAssembler.toModel(peopleWithLink, findAllLinks);
+
+    }
+
+    public PagedModel<EntityModel<PersonDTO>> findByName(String firstName, Pageable pageable) {
+        logger.info("Find people by name");
+        Page<PersonModel> people = personRepository.findPeopleByName(firstName,pageable);
+
+        Page<PersonDTO> peopleWithLink = people.map(personModel -> {
+            PersonDTO personDTO = parseObject(personModel, PersonDTO.class);
+            addHateoasLinks(personDTO);
+            return personDTO;
+        });
+
+        Link findAllLinks = WebMvcLinkBuilder.linkTo(
+                        WebMvcLinkBuilder.methodOn(PersonController.class)
+                                .findAll(pageable.getPageNumber(), pageable.getPageSize(), String.valueOf(pageable.getSort())))
+                .withSelfRel();
+       return pagedResourcesAssembler.toModel(peopleWithLink, findAllLinks);
 
     }
 
@@ -50,11 +81,11 @@ public class PersonService {
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
         PersonDTO resultParse = parseObject(personEntity, PersonDTO.class);
         addHateoasLinks(resultParse);
-        return  resultParse;
+        return resultParse;
     }
 
     public PersonDTO create(PersonDTO personDTO) {
-        if(personDTO == null) throw new ResourceObjectIsNullException();
+        if (personDTO == null) throw new ResourceObjectIsNullException();
 
         logger.info("Creating one PersonDTO");
         PersonModel personEntity = parseObject(personDTO, PersonModel.class);
@@ -71,7 +102,7 @@ public class PersonService {
     }
 
     public PersonDTO update(PersonDTO personDTO) {
-        if(personDTO == null) throw new ResourceObjectIsNullException();
+        if (personDTO == null) throw new ResourceObjectIsNullException();
 
         logger.info("Updating one PersonDTO");
         PersonModel personEntity = personRepository.findById(personDTO.getId())
@@ -92,6 +123,7 @@ public class PersonService {
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
         personRepository.delete(personEntity);
     }
+
     @Transactional
     public PersonDTO disablePerson(Long id) {
         logger.info("Disabling one Person");
@@ -99,14 +131,14 @@ public class PersonService {
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID."));
         personRepository.disablePerson(id);
         PersonModel entity = personRepository.findById(id).get();
-        PersonDTO resultParse= parseObject(entity, PersonDTO.class);
+        PersonDTO resultParse = parseObject(entity, PersonDTO.class);
         addHateoasLinks(resultParse);
         return resultParse;
     }
 
     private void addHateoasLinks(PersonDTO resultParse) {
         resultParse.add(linkTo(methodOn(PersonController.class).findById(resultParse.getId())).withSelfRel().withType("GET"));
-        resultParse.add(linkTo(methodOn(PersonController.class).findAll()).withRel("findAll").withType("GET"));
+        resultParse.add(linkTo(methodOn(PersonController.class).findAll(1, 12, "asc")).withRel("findAll").withType("GET"));
         resultParse.add(linkTo(methodOn(PersonController.class).create(resultParse)).withRel("create").withType("POST"));
         resultParse.add(linkTo(methodOn(PersonController.class).update(resultParse)).withRel("update").withType("PUT"));
         resultParse.add(linkTo(methodOn(PersonController.class).disablePerson(resultParse.getId())).withRel("disable").withType("PATCH"));
