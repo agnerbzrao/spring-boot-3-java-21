@@ -1,14 +1,15 @@
 package br.com.spring.agner.rest_with_spring_boot.data.dto.v1;
-
-import br.com.spring.agner.rest_with_spring_boot.serializer.GenderSerializer;
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
+
+@Relation(collectionRelation = "people")
+@JsonPropertyOrder({"id", "first_name", "last_name", "phoneNumber", "birthDay", "address", "gender", "enabled"})
 
 public class PersonDTO extends RepresentationModel<PersonDTO> implements Serializable {
     @Serial
@@ -28,12 +29,10 @@ public class PersonDTO extends RepresentationModel<PersonDTO> implements Seriali
 
     private Date birthDay;
 
-//    @JsonIgnore
+    //    @JsonIgnore
     private String address;
 
-    private String sensitiveDate;
-
-//    @JsonSerialize(using = GenderSerializer.class)
+    //    @JsonSerialize(using = GenderSerializer.class)
     private String gender;
 
     private Boolean enabled;
@@ -45,6 +44,7 @@ public class PersonDTO extends RepresentationModel<PersonDTO> implements Seriali
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+
     public Long getId() {
         return id;
     }
@@ -94,14 +94,6 @@ public class PersonDTO extends RepresentationModel<PersonDTO> implements Seriali
         this.birthDay = birthDay;
     }
 
-    public String getSensitiveDate() {
-        return sensitiveDate;
-    }
-
-    public void setSensitiveDate(String sensitiveDate) {
-        this.sensitiveDate = sensitiveDate;
-    }
-
     public Boolean getEnabled() {
         return enabled;
     }
@@ -115,11 +107,11 @@ public class PersonDTO extends RepresentationModel<PersonDTO> implements Seriali
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         PersonDTO personDTO = (PersonDTO) o;
-        return Objects.equals(getId(), personDTO.getId()) && Objects.equals(getFirstName(), personDTO.getFirstName()) && Objects.equals(getLastName(), personDTO.getLastName()) && Objects.equals(getPhoneNumber(), personDTO.getPhoneNumber()) && Objects.equals(getBirthDay(), personDTO.getBirthDay()) && Objects.equals(getAddress(), personDTO.getAddress()) && Objects.equals(getSensitiveDate(), personDTO.getSensitiveDate()) && Objects.equals(getGender(), personDTO.getGender()) && Objects.equals(getEnabled(), personDTO.getEnabled());
+        return Objects.equals(getId(), personDTO.getId()) && Objects.equals(getFirstName(), personDTO.getFirstName()) && Objects.equals(getLastName(), personDTO.getLastName()) && Objects.equals(getPhoneNumber(), personDTO.getPhoneNumber()) && Objects.equals(getBirthDay(), personDTO.getBirthDay()) && Objects.equals(getAddress(), personDTO.getAddress()) && Objects.equals(getGender(), personDTO.getGender()) && Objects.equals(getEnabled(), personDTO.getEnabled());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getId(), getFirstName(), getLastName(), getPhoneNumber(), getBirthDay(), getAddress(), getSensitiveDate(), getGender(), getEnabled());
+        return Objects.hash(super.hashCode(), getId(), getFirstName(), getLastName(), getPhoneNumber(), getBirthDay(), getAddress(), getGender(), getEnabled());
     }
 }
