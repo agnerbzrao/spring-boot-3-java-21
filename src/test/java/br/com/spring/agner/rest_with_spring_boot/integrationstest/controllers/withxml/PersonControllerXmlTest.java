@@ -2,6 +2,7 @@ package br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.w
 
 import br.com.spring.agner.rest_with_spring_boot.config.TestConfigs;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.wrappers.xml.PagedModelPerson;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.testcontainers.AbstractIntegrationTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -166,8 +167,9 @@ public class PersonControllerXmlTest extends AbstractIntegrationTest {
     @Order(6)
     void findAll() throws JsonProcessingException {
 
-        var content = given(specification)
+        String content = given(specification)
                 .accept(MediaType.APPLICATION_XML_VALUE)
+                .queryParam("page", 1,"size",12,"direction", "asc")
                 .when()
                 .get()
                 .then()
@@ -177,16 +179,17 @@ public class PersonControllerXmlTest extends AbstractIntegrationTest {
                 .body()
                 .asString();
 
-        List<PersonDTO> people = xmlMapper.readValue(content, new TypeReference<>() {});
+        PagedModelPerson wrapper = xmlMapper.readValue(content, PagedModelPerson.class);
+        List<PersonDTO> people = wrapper.getContent();
         PersonDTO personOne = people.getFirst();
 
         assertNotNull(personOne.getId());
         assertTrue(personOne.getId() > 0);
 
-        assertEquals("Ayrton", personOne.getFirstName());
-        assertEquals("Senna", personOne.getLastName());
-        assertEquals("São Paulo - Brasil", personOne.getAddress());
-        assertEquals("Male", personOne.getGender());
+        assertEquals("Agathe", personOne.getFirstName());
+        assertEquals("Elsey", personOne.getLastName());
+        assertEquals("41 Anthes Park", personOne.getAddress());
+        assertEquals("Female", personOne.getGender());
         assertTrue(personOne.getEnabled());
 
         PersonDTO personFour = people.get(4);
@@ -194,10 +197,10 @@ public class PersonControllerXmlTest extends AbstractIntegrationTest {
         assertNotNull(personFour.getId());
         assertTrue(personFour.getId() > 0);
 
-        assertEquals("Muhamamd", personFour.getFirstName());
-        assertEquals("Ali", personFour.getLastName());
-        assertEquals("Kentucky - US", personFour.getAddress());
-        assertEquals("Male", personFour.getGender());
+        assertEquals("Ailis", personFour.getFirstName());
+        assertEquals("Linnock", personFour.getLastName());
+        assertEquals("942 Mcguire Plaza", personFour.getAddress());
+        assertEquals("Female", personFour.getGender());
         assertTrue(personFour.getEnabled());
     }
     private void mockPerson() {
