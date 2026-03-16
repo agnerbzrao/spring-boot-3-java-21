@@ -2,7 +2,9 @@ package br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.w
 
 import br.com.spring.agner.rest_with_spring_boot.config.TestConfigs;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.withyaml.mapper.YAMLMapper;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.AccountCredentialsDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.BookDTO;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.TokenDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.wrappers.xml.PagedModelBook;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.testcontainers.AbstractIntegrationTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,6 +17,7 @@ import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
+import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -34,29 +37,58 @@ class BookControllerYamlTest extends AbstractIntegrationTest {
 
     private static RequestSpecification specification;
     private static YAMLMapper objectMapper;
-
+    private static TokenDTO tokenDto;
     private static BookDTO bookDTO;
 
     @BeforeAll
     static void setUp() {
         objectMapper = new YAMLMapper();
         bookDTO = new BookDTO();
+        tokenDto = new TokenDTO();
     }
 
     @Test
-    @Order(1)
-    void create() throws JsonProcessingException {
-        mockPerson();
+    @Order(0)
+    void signin() throws JsonProcessingException {
+        AccountCredentialsDTO credentials =
+                new AccountCredentialsDTO("leandro", "admin123");
+
+        tokenDto = given()
+                .config(
+                        RestAssuredConfig.config()
+                                .encoderConfig(
+                                        EncoderConfig.encoderConfig().
+                                                encodeContentTypeAs(MediaType.APPLICATION_YAML_VALUE, ContentType.TEXT))
+                )
+                .basePath("/auth/signin")
+                .port(TestConfigs.SERVER_PORT)
+                .contentType(MediaType.APPLICATION_YAML_VALUE)
+                .accept(MediaType.APPLICATION_YAML_VALUE)
+                .body(credentials, objectMapper)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(TokenDTO.class, objectMapper);
 
         specification = new RequestSpecBuilder()
                 .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCAL)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenDto.getAccessToken())
                 .setBaseUri("http://localhost")
                 .setBasePath("/book")
                 .setPort(TestConfigs.SERVER_PORT)
                 .addFilter(new RequestLoggingFilter(LogDetail.ALL))
                 .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
                 .build();
-
+        Assert.assertNotNull(tokenDto.getAccessToken());
+        Assert.assertNotNull(tokenDto.getRefreshToken());
+    }
+    @Test
+    @Order(1)
+    void create() throws JsonProcessingException {
+        mockPerson();
         var createdBook = given().config(
                         RestAssuredConfig.config()
                                 .encoderConfig(

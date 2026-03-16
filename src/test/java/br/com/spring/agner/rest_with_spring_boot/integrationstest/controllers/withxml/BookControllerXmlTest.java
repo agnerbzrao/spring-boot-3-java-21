@@ -1,7 +1,9 @@
 package br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.withxml;
 
 import br.com.spring.agner.rest_with_spring_boot.config.TestConfigs;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.AccountCredentialsDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.BookDTO;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.TokenDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.wrappers.xml.PagedModelBook;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.testcontainers.AbstractIntegrationTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,6 +15,7 @@ import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.specification.RequestSpecification;
+import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -32,24 +35,53 @@ public class BookControllerXmlTest extends AbstractIntegrationTest {
     private static RequestSpecification specification;
     private static XmlMapper xmlMapper;
     private static BookDTO bookDTO;
+    private static TokenDTO tokenDto;
 
     @BeforeAll
     static void setUp() {
-
+        tokenDto = new TokenDTO();
         xmlMapper = new XmlMapper();
         xmlMapper.registerModule(new JavaTimeModule());
         xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         bookDTO = new BookDTO();
+    }
+
+    @Test
+    @Order(0)
+    void signin() throws JsonProcessingException {
+        AccountCredentialsDTO credentials =
+                new AccountCredentialsDTO("leandro", "admin123");
+
+        String content = given()
+                .basePath("/auth/signin")
+                .port(TestConfigs.SERVER_PORT)
+                .contentType(MediaType.APPLICATION_XML_VALUE)
+                .accept(MediaType.APPLICATION_XML_VALUE)
+                .body(credentials)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .asString();
+
+        tokenDto = xmlMapper.readValue(content, TokenDTO.class);
         specification = new RequestSpecBuilder()
                 .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCAL)
                 .addHeader("Accept", MediaType.APPLICATION_XML_VALUE)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenDto.getAccessToken())
                 .setBaseUri("http://localhost")
                 .setBasePath("/book")
                 .setPort(TestConfigs.SERVER_PORT)
                 .addFilter(new RequestLoggingFilter((LogDetail.ALL)))
                 .addFilter(new ResponseLoggingFilter((LogDetail.ALL)))
                 .build();
+
+        Assert.assertNotNull(tokenDto.getAccessToken());
+        Assert.assertNotNull(tokenDto.getRefreshToken());
+
     }
 
     @Test

@@ -2,7 +2,9 @@ package br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.w
 
 import br.com.spring.agner.rest_with_spring_boot.config.TestConfigs;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.withyaml.mapper.YAMLMapper;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.AccountCredentialsDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.TokenDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.wrappers.xml.PagedModelPerson;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.testcontainers.AbstractIntegrationTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +29,7 @@ import static io.restassured.RestAssured.given;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -35,13 +38,53 @@ class PersonControllerYamlTest extends AbstractIntegrationTest {
 
     private static RequestSpecification specification;
     private static YAMLMapper objectMapper;
-
+    private static TokenDTO tokenDto;
     private static PersonDTO personDTO;
 
     @BeforeAll
     static void setUp() {
         objectMapper = new YAMLMapper();
         personDTO = new PersonDTO();
+        tokenDto = new TokenDTO();
+    }
+
+    @Test
+    @Order(0)
+    void signin() throws JsonProcessingException {
+        AccountCredentialsDTO credentials =
+                new AccountCredentialsDTO("leandro", "admin123");
+
+        tokenDto = given()
+                .config(
+                        RestAssuredConfig.config()
+                                .encoderConfig(
+                                        EncoderConfig.encoderConfig().
+                                                encodeContentTypeAs(MediaType.APPLICATION_YAML_VALUE, ContentType.TEXT))
+                )
+                .basePath("/auth/signin")
+                .port(TestConfigs.SERVER_PORT)
+                .contentType(MediaType.APPLICATION_YAML_VALUE)
+                .accept(MediaType.APPLICATION_YAML_VALUE)
+                .body(credentials, objectMapper)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(TokenDTO.class, objectMapper);
+
+        specification = new RequestSpecBuilder()
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCAL)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenDto.getAccessToken())
+                .setBaseUri("http://localhost")
+                .setBasePath("/person")
+                .setPort(TestConfigs.SERVER_PORT)
+                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
+                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
+                .build();
+        assertNotNull(tokenDto.getAccessToken());
+        assertNotNull(tokenDto.getRefreshToken());
     }
 
     @Test
@@ -49,14 +92,7 @@ class PersonControllerYamlTest extends AbstractIntegrationTest {
     void create() throws JsonProcessingException {
         mockPerson();
 
-        specification = new RequestSpecBuilder()
-                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCAL)
-                .setBaseUri("http://localhost")
-                .setBasePath("/person")
-                .setPort(TestConfigs.SERVER_PORT)
-                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
-                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
-                .build();
+
 
         var createdPerson = given().config(
                         RestAssuredConfig.config()

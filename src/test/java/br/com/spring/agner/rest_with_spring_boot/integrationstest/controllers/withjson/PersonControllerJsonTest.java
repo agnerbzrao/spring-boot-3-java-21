@@ -1,7 +1,9 @@
 package br.com.spring.agner.rest_with_spring_boot.integrationstest.controllers.withjson;
 
 import br.com.spring.agner.rest_with_spring_boot.config.TestConfigs;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.AccountCredentialsDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.PersonDTO;
+import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.TokenDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.dto.wrappers.WrapperPersonDTO;
 import br.com.spring.agner.rest_with_spring_boot.integrationstest.testcontainers.AbstractIntegrationTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,6 +14,7 @@ import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.specification.RequestSpecification;
+import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -29,22 +32,48 @@ class PersonControllerJsonTest extends AbstractIntegrationTest {
     private static RequestSpecification specification;
     private static ObjectMapper objectMapper;
     private static PersonDTO personDTO;
+    private static TokenDTO tokenDto;
 
     @BeforeAll
     static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
         personDTO = new PersonDTO();
-        specification = new RequestSpecBuilder()
-                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCAL)
-                .setBaseUri("http://localhost")
-                .setBasePath("/person")
-                .setPort(TestConfigs.SERVER_PORT)
-                .addFilter(new RequestLoggingFilter((LogDetail.ALL)))
-                .addFilter(new ResponseLoggingFilter((LogDetail.ALL)))
-                .build();
+        tokenDto = new TokenDTO();
     }
 
+    @Test
+    @Order(0)
+    void signin() {
+        AccountCredentialsDTO credentials =
+                new AccountCredentialsDTO("leandro", "admin123");
+
+        tokenDto = given()
+                .basePath("/auth/signin")
+                .port(TestConfigs.SERVER_PORT)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(credentials)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(TokenDTO.class);
+
+        specification = new RequestSpecBuilder()
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCAL)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenDto.getAccessToken())
+                .setBasePath("/person")
+                .setPort(TestConfigs.SERVER_PORT)
+                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
+                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
+                .build();
+
+        Assert.assertNotNull(tokenDto.getAccessToken());
+        Assert.assertNotNull(tokenDto.getRefreshToken());
+    }
     @Test
     @Order(1)
     void create() throws JsonProcessingException {
